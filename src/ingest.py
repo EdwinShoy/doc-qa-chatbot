@@ -24,6 +24,15 @@ CHUNK_OVERLAP = 150
 
 
 def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
+    # Each step moves the window forward by (chunk_size - overlap). If that's
+    # zero or negative, `start` never advances and the loop below runs forever.
+    if chunk_size <= 0:
+        raise ValueError(f"chunk_size must be positive, got {chunk_size}")
+    if not 0 <= overlap < chunk_size:
+        raise ValueError(
+            f"overlap must be >= 0 and smaller than chunk_size ({chunk_size}), got {overlap}"
+        )
+
     chunks = []
     start = 0
     while start < len(text):

@@ -33,7 +33,7 @@ def main():
 
         chunks = retriever.retrieve(question, top_k=3)
 
-        if not chunks or chunks[0]["score"] == 0:
+        if not chunks:
             print("Answer: I couldn't find anything relevant in the documents for that.\n")
             continue
 

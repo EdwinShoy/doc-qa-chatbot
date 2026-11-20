@@ -32,8 +32,14 @@ class Retriever:
         with open(chunks_path, encoding="utf-8") as f:
             self.chunks = json.load(f)
 
-    def retrieve(self, query: str, top_k: int = 3) -> list[dict]:
-        """Returns the top_k chunks most similar to the query, each with a score."""
+    def retrieve(self, query: str, top_k: int = 3, min_score: float = 0.0) -> list[dict]:
+        """Returns up to top_k chunks most similar to the query, each with a score.
+
+        Chunks scoring <= min_score are dropped. With the default of 0.0 that
+        removes chunks sharing no terms with the query at all, so the LLM is
+        never handed (and never cites) a "source" that's completely unrelated.
+        May return fewer than top_k results, or an empty list.
+        """
         query_vec = self.vectorizer.transform([query])
         scores = cosine_similarity(query_vec, self.matrix)[0]
 
@@ -41,6 +47,8 @@ class Retriever:
 
         results = []
         for idx in ranked_indices:
+            if scores[idx] <= min_score:
+                break  # ranked high-to-low, so everything after this is lower too
             chunk = dict(self.chunks[idx])
             chunk["score"] = float(scores[idx])
             results.append(chunk)
